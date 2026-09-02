@@ -810,7 +810,7 @@
     el.innerHTML = '<div class="modal">'+
       '<h3>Tentang MINUM</h3>'+
       '<p><strong>MINUM</strong> &mdash; Monitor Ingat Notifikasi Untuk Minum obat.</p>'+
-      '<p>Versi 1.10</p>'+
+      '<p>Versi 1.11</p>'+
       '<p>Dibuat oleh Richard &middot; 2 September 2026.</p>'+
       '<div class="modal-actions">'+
         '<button class="modal-cancel" style="flex:1;" data-action="close-about">Tutup</button>'+
@@ -846,13 +846,11 @@
       var arr = state.draft.times.slice(0,n);
       while(arr.length<n) arr.push("");
       state.draft.times = arr;
-      render();
     });
     bindField("fieldDurUnit", function(v){
       state.draft.durationUnit = v;
       var opts = durationOptions(v);
       if(opts.indexOf(state.draft.durationValue) === -1) state.draft.durationValue = opts[0];
-      render();
     });
     bindField("fieldDurValue", function(v){ state.draft.durationValue = parseInt(v,10); });
 
@@ -869,7 +867,19 @@
     var el = document.getElementById(id);
     if(!el) return;
     var evt = (el.tagName==="SELECT") ? "change" : "input";
-    el.addEventListener(evt, function(e){ cb(e.target.value); });
+    el.addEventListener(evt, function(e){
+      var caret = null;
+      try{ if(typeof e.target.selectionStart === "number") caret = e.target.selectionStart; }catch(err){}
+      cb(e.target.value);
+      render();
+      var again = document.getElementById(id);
+      if(again){
+        again.focus();
+        if(caret !== null){
+          try{ again.setSelectionRange(caret, caret); }catch(err){}
+        }
+      }
+    });
   }
 
   function onAction(e){
