@@ -92,10 +92,20 @@
     line-height:1.45;
     display:flex; gap:10px; align-items:flex-start;
   }
-  .banner-info{ background: var(--amber-soft); color:#7A4E17; }
+  .banner-info{ background: var(--amber-soft); color:#7A4E17; position:relative; }
   .banner-info button{
     margin-top:6px; border:none; background:var(--amber); color:#fff;
     padding:6px 12px; border-radius:999px; font-weight:700; font-size:12.5px; cursor:pointer;
+  }
+  .banner-info .close-x{ color:#7A4E17; }
+  .banner-install{ background: var(--sage-100); color: var(--teal-dark); position:relative; }
+  .banner-install h4{ margin:0 0 6px; font-size:13.5px; }
+  .banner-install ol{ margin:0 0 10px; padding-left:18px; font-size:12.5px; line-height:1.6; }
+  .banner-install ol:last-of-type{ margin-bottom:0; }
+  .banner-install .platform-label{ font-weight:800; font-size:12px; margin:0 0 3px; display:block; }
+  .banner-install .close-x{
+    position:absolute; top:10px; right:10px; background:none; border:none; color:var(--teal-dark);
+    opacity:0.6; cursor:pointer; padding:4px;
   }
   .banner svg{flex-shrink:0; margin-top:1px;}
 
@@ -373,6 +383,7 @@
     step: 1,                // 1..6
     draft: null,
     infoDismissed: (function(){ try{ return localStorage.getItem("minum_info_dismissed")==="1"; }catch(e){ return false; } })(),
+    installDismissed: (function(){ try{ return localStorage.getItem("minum_install_dismissed")==="1"; }catch(e){ return false; } })(),
     toast: null,
     confirmDeleteId: null,
     fired: loadFired(),
@@ -391,6 +402,24 @@
       instruction: "sebelum_makan",
       durationUnit: "hari",
       durationValue: 7,
+      startDate: todayISO(),
+      searchQuery: ""
+    };
+  }
+
+  function draftFromMed(med){
+    return {
+      id: med.id,
+      name: med.name, brand: med.brand || "", form: med.doseUnit,
+      doseAmount: med.doseAmount, doseUnit: med.doseUnit,
+      periodType: med.periodType,
+      days: med.days.slice(),
+      timesPerDay: med.timesPerDay,
+      times: med.times.slice(),
+      instruction: med.instruction,
+      durationUnit: med.durationUnit,
+      durationValue: med.durationValue,
+      startDate: med.startDate,
       searchQuery: ""
     };
   }
@@ -464,6 +493,7 @@
     var html = "";
     if(state.view === "list"){
       html += renderTopbar();
+      if(!state.installDismissed) html += renderInstallBanner();
       if(!state.infoDismissed) html += renderInfoBanner();
       html += renderAddButton();
       html += renderList();
@@ -490,6 +520,27 @@
     '</div>';
   }
 
+  function renderInstallBanner(){
+    return ''+
+    '<div class="banner banner-install">'+
+      '<button class="close-x" data-action="dismiss-install" aria-label="Tutup">&#10005;</button>'+
+      '<h4>&#128241; Pasang MINUM sebagai aplikasi di layar utama</h4>'+
+      '<span class="platform-label">Di Android (Chrome):</span>'+
+      '<ol>'+
+        '<li>Ketuk ikon titik tiga (&#8942;) di pojok kanan atas Chrome</li>'+
+        '<li>Pilih &ldquo;Instal aplikasi&rdquo; atau &ldquo;Tambahkan ke layar Utama&rdquo;</li>'+
+        '<li>Ketuk &ldquo;Instal&rdquo; / &ldquo;Tambahkan&rdquo; pada konfirmasi yang muncul</li>'+
+      '</ol>'+
+      '<span class="platform-label">Di iPhone (Safari):</span>'+
+      '<ol>'+
+        '<li>Ketuk ikon Bagikan (kotak dengan panah ke atas) di bagian bawah layar</li>'+
+        '<li>Gulir ke bawah, pilih &ldquo;Tambah ke Layar Utama&rdquo;</li>'+
+        '<li>Ketuk &ldquo;Tambah&rdquo; di pojok kanan atas</li>'+
+      '</ol>'+
+      'Setelah itu, buka MINUM lewat ikonnya di layar utama (bukan lewat Chrome/Safari lagi) supaya tampilannya penuh layar seperti aplikasi asli.'+
+    '</div>';
+  }
+
   function renderInfoBanner(){
     var statusMsg = "";
     if(state.notifStatus === "granted") statusMsg = "&#10003; Notifikasi sistem aktif.";
@@ -498,6 +549,7 @@
 
     return ''+
     '<div class="banner banner-info">'+
+      '<button class="close-x" data-action="dismiss-info" aria-label="Tutup">&#10005;</button>'+
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 9v5" stroke="#7A4E17" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="#7A4E17"/><path d="M10.3 3.9L2.6 17.5c-.5.9.1 2 1.2 2h16.4c1.1 0 1.7-1.1 1.2-2L13.7 3.9c-.6-1-2-1-2.6 0z" stroke="#7A4E17" stroke-width="1.6"/></svg>'+
       '<div>'+
         'Pengingat utama adalah pop-up + suara di dalam aplikasi ini, dan itu hanya berbunyi selama aplikasi dibuka (di layar depan/latar). Jangan tutup paksa browser saat jam minum obat mendekat. Untuk pengingat yang tetap bunyi walau aplikasi ditutup, gunakan tombol &ldquo;Alarm HP&rdquo; di tiap kartu obat (khusus Android).'+
@@ -558,6 +610,7 @@
           '</div>'
         )+
         '<div class="card-actions">'+
+          '<button class="btn-ghost" data-action="edit-med" data-id="'+m.id+'">Edit</button>'+
           '<button class="btn-ghost danger" data-action="ask-delete" data-id="'+m.id+'">Hapus</button>'+
         '</div>'+
       '</div>';
@@ -708,7 +761,7 @@
       summaryRow("Lama", d.durationValue + " " + d.durationUnit)+
     '</div>';
 
-    html += '<div style="height:16px"></div><button class="btn-primary" data-action="finish">Selesai &amp; Ingatkan</button>';
+    html += '<div style="height:16px"></div><button class="btn-primary" data-action="finish">'+(d.id ? 'Simpan Perubahan' : 'Selesai &amp; Ingatkan')+'</button>';
     return html;
   }
 
@@ -805,10 +858,20 @@
         state.view = "wizard";
         render();
         break;
+      case "edit-med":
+        var editId = e.currentTarget.getAttribute("data-id");
+        var medToEdit = state.meds.filter(function(mm){ return String(mm.id) === String(editId); })[0];
+        if(medToEdit){
+          state.draft = draftFromMed(medToEdit);
+          state.step = 2;
+          state.view = "wizard";
+          render();
+        }
+        break;
       case "wiz-back":
-        if(state.step===1){ state.view="list"; render(); }
+        var firstStep = (state.draft && state.draft.id) ? 2 : 1;
+        if(state.step===firstStep){ state.view="list"; render(); }
         else {
-          if(!validateStep(state.step-1, true)){ /* allow going back regardless */ }
           state.step -= 1; render();
         }
         break;
@@ -869,7 +932,21 @@
         break;
       case "show-info":
         state.infoDismissed = false;
-        try{ localStorage.setItem("minum_info_dismissed","0"); }catch(err){}
+        state.installDismissed = false;
+        try{
+          localStorage.setItem("minum_info_dismissed","0");
+          localStorage.setItem("minum_install_dismissed","0");
+        }catch(err){}
+        render();
+        break;
+      case "dismiss-install":
+        state.installDismissed = true;
+        try{ localStorage.setItem("minum_install_dismissed","1"); }catch(err){}
+        render();
+        break;
+      case "dismiss-info":
+        state.infoDismissed = true;
+        try{ localStorage.setItem("minum_info_dismissed","1"); }catch(err){}
         render();
         break;
       case "dismiss-toast":
@@ -900,7 +977,7 @@
   function finishWizard(){
     var d = state.draft;
     var med = {
-      id: Date.now(),
+      id: d.id || Date.now(),
       name: d.name || "Obat tanpa nama",
       brand: d.brand,
       doseAmount: d.doseAmount,
@@ -912,14 +989,20 @@
       instruction: d.instruction,
       durationValue: d.durationValue,
       durationUnit: d.durationUnit,
-      startDate: todayISO(),
-      endDate: addToDate(todayISO(), d.durationValue, d.durationUnit)
+      startDate: d.startDate,
+      endDate: addToDate(d.startDate, d.durationValue, d.durationUnit)
     };
-    state.meds.push(med);
+    if(d.id){
+      state.meds = state.meds.map(function(mm){
+        return String(mm.id) === String(d.id) ? med : mm;
+      });
+    } else {
+      state.meds.push(med);
+    }
     saveMeds(state.meds);
     state.view = "list";
     render();
-    requestNotifPermission();
+    if(!d.id) requestNotifPermission();
   }
 
   function requestNotifPermission(){
