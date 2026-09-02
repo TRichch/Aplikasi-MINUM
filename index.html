@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>MINUM — Pengingat Obat</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#2F6F5E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MINUM">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
   :root{
     --sage-50:#F1F7F3;
@@ -395,7 +403,33 @@
     var hour = parseInt(parts[0],10);
     var minute = parseInt(parts[1],10);
     if(isNaN(hour) || isNaN(minute)) return null;
-    return "intent:#Intent;action=android.intent.action.SET_ALARM;S.android.intent.extra.alarm.MESSAGE="+encodeURIComponent(label)+";i.android.intent.extra.alarm.HOUR="+hour+";i.android.intent.extra.alarm.MINUTES="+minute+";end";
+    return "intent://setalarm/#Intent;action=android.intent.action.SET_ALARM;S.android.intent.extra.alarm.MESSAGE="+encodeURIComponent(label)+";i.android.intent.extra.alarm.HOUR="+hour+";i.android.intent.extra.alarm.MINUTES="+minute+";end;";
+  }
+  function pad2gc(n){ return n<10 ? "0"+n : ""+n; }
+  function toGCalUTC(d){
+    return d.getUTCFullYear()+pad2gc(d.getUTCMonth()+1)+pad2gc(d.getUTCDate())+"T"+pad2gc(d.getUTCHours())+pad2gc(d.getUTCMinutes())+pad2gc(d.getUTCSeconds())+"Z";
+  }
+  var GCAL_DAY_MAP = {"Sen":"MO","Sel":"TU","Rab":"WE","Kam":"TH","Jum":"FR","Sab":"SA","Min":"SU"};
+  function buildGCalLink(med, time){
+    var parts = time.split(":");
+    var hh = parseInt(parts[0],10), mm = parseInt(parts[1],10);
+    if(isNaN(hh) || isNaN(mm)) return null;
+    var start = new Date(med.startDate+"T00:00:00");
+    start.setHours(hh, mm, 0, 0);
+    var end = new Date(start.getTime() + 15*60000);
+    var until = new Date(med.endDate+"T23:59:59");
+    var recur = "";
+    if(med.periodType === "everyday"){
+      recur = "RRULE:FREQ=DAILY;UNTIL="+toGCalUTC(until);
+    } else if(med.days && med.days.length){
+      var byday = med.days.map(function(d){ return GCAL_DAY_MAP[d]; }).join(",");
+      recur = "RRULE:FREQ=WEEKLY;BYDAY="+byday+";UNTIL="+toGCalUTC(until);
+    }
+    var title = encodeURIComponent("Minum " + med.name);
+    var details = encodeURIComponent((med.doseAmount||"") + " " + (med.doseUnit||"") + " - " + instructionLabel(med.instruction));
+    var url = "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+title+"&dates="+toGCalUTC(start)+"/"+toGCalUTC(end)+"&details="+details;
+    if(recur) url += "&recur="+encodeURIComponent(recur);
+    return url;
   }
   function pad2(n){ return n < 10 ? "0"+n : ""+n; }
   function todayISO(){ var d = new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
@@ -503,18 +537,26 @@
           (m.periodType==="everyday" ? '<span class="chip">Setiap hari</span>' : m.days.map(function(d){return '<span class="chip">'+d+'</span>';}).join(''))+
           m.times.map(function(t){return '<span class="chip chip-time">'+t+'</span>';}).join('')+
         '</div>'+
-        (isAndroid() ? (
+        (
           '<div style="margin-top:11px;">'+
-            '<p style="margin:0 0 6px;font-size:11.5px;font-weight:800;color:var(--ink-soft);">Alarm HP asli (tetap bunyi walau aplikasi ditutup)</p>'+
+            '<p style="margin:0 0 6px;font-size:11.5px;font-weight:800;color:var(--ink-soft);">Pengingat yang tetap aktif walau aplikasi ditutup:</p>'+
             '<div class="chip-row">'+
               m.times.map(function(t){
-                var uri = buildAlarmIntentUri(t, "Minum " + m.name);
-                return '<a href="'+uri+'" class="btn-ghost" style="flex:none;padding:7px 11px;font-size:12px;text-decoration:none;display:inline-block;">&#9200; '+t+'</a>';
+                var gurl = buildGCalLink(m, t);
+                return '<a href="'+gurl+'" target="_blank" rel="noopener" class="btn-ghost" style="flex:none;padding:7px 11px;font-size:12px;text-decoration:none;display:inline-block;">&#128197; Kalender '+t+'</a>';
               }).join('')+
             '</div>'+
-            '<p style="margin:6px 0 0;font-size:11px;color:var(--ink-soft);">Kalau tombol di atas tidak membuka aplikasi Jam, atur manual di aplikasi Jam bawaan HP dengan jam yang sama.</p>'+
+            (isAndroid() ? (
+              '<p style="margin:8px 0 4px;font-size:11px;color:var(--ink-soft);">Atau coba (tidak selalu berhasil, tergantung HP):</p>'+
+              '<div class="chip-row">'+
+                m.times.map(function(t){
+                  var uri = buildAlarmIntentUri(t, "Minum " + m.name);
+                  return '<a href="'+uri+'" class="btn-ghost" style="flex:none;padding:6px 10px;font-size:11px;text-decoration:none;display:inline-block;opacity:0.75;">&#9200; Alarm HP '+t+'</a>';
+                }).join('')+
+              '</div>'
+            ) : '')+
           '</div>'
-        ) : '')+
+        )+
         '<div class="card-actions">'+
           '<button class="btn-ghost danger" data-action="ask-delete" data-id="'+m.id+'">Hapus</button>'+
         '</div>'+
@@ -682,6 +724,9 @@
       '<div class="txt"><h4>Waktunya minum obat</h4><p>'+escapeHtml(t.name)+' &middot; '+escapeHtml(t.dose)+' &middot; '+escapeHtml(instructionLabel(t.instruction))+'</p></div>'+
       '<button data-action="dismiss-toast">Oke</button>';
     document.body.appendChild(el);
+    el.querySelectorAll("[data-action]").forEach(function(btn){
+      btn.addEventListener("click", onAction);
+    });
   }
 
   function renderDeleteModal(){
@@ -696,7 +741,11 @@
       '</div>'+
     '</div>';
     document.body.appendChild(el);
+    el.querySelectorAll("[data-action]").forEach(function(btn){
+      btn.addEventListener("click", onAction);
+    });
   }
+
 
   /* ================= EVENT HANDLING ================= */
   function attachHandlers(){
@@ -944,9 +993,27 @@
     render();
   }
 
+  var sharedAudioCtx = null;
+  function unlockAudio(){
+    try{
+      if(!sharedAudioCtx){
+        sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if(sharedAudioCtx.state === "suspended"){
+        sharedAudioCtx.resume();
+      }
+    }catch(e){}
+  }
+  // Setiap sentuhan pengguna di mana pun pada aplikasi akan "membuka kunci" audio,
+  // supaya nanti saat alarm berbunyi otomatis (tanpa sentuhan), suaranya tetap diizinkan browser.
+  document.addEventListener("click", unlockAudio);
+  document.addEventListener("touchstart", unlockAudio);
+
   function playBeep(){
     try{
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      unlockAudio();
+      if(!sharedAudioCtx) return;
+      var ctx = sharedAudioCtx;
       var o = ctx.createOscillator();
       var g = ctx.createGain();
       o.type = "sine"; o.frequency.value = 880;
@@ -969,8 +1036,15 @@
 
   setInterval(checkReminders, 15000);
 
+
   /* ================= INIT ================= */
   render();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(e){});
+    });
+  }
 })();
 </script>
 </body>
