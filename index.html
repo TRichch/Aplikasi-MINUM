@@ -277,6 +277,15 @@
   .modal-actions button{ flex:1; padding:12px; border-radius:var(--radius-sm); font-weight:800; font-size:14px; cursor:pointer; border:none;}
   .modal-cancel{ background:var(--sage-100); color:var(--ink); }
   .modal-confirm{ background:var(--danger); color:#fff; }
+  .menu-row{
+    display:flex; align-items:center; gap:13px; padding:14px 4px; cursor:pointer;
+    border-bottom:1px solid var(--sage-100); font-size:15px; font-weight:700; color:var(--ink);
+  }
+  .menu-row:last-child{ border-bottom:none; }
+  .menu-row .menu-icon{
+    width:38px; height:38px; border-radius:11px; background:var(--sage-100);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--teal-dark);
+  }
 
   .reminder-toast{
     position:fixed; top:16px; left:16px; right:16px; max-width:448px; margin:0 auto; z-index:200;
@@ -291,6 +300,10 @@
     background:rgba(255,255,255,0.15); border:none; color:#fff; padding:8px 12px; border-radius:999px;
     font-weight:800; font-size:12px; cursor:pointer; flex-shrink:0;
   }
+  .reminder-toast .confirm-actions{ display:flex; gap:8px; margin-top:10px; }
+  .reminder-toast .confirm-actions button{ flex:1; padding:10px; font-size:13px; }
+  .reminder-toast .btn-taken{ background:#3F9C73; color:#fff; }
+  .reminder-toast .btn-missed{ background:rgba(255,255,255,0.18); color:#fff; }
 
   ::-webkit-scrollbar{ display:none; }
 </style>
@@ -375,13 +388,22 @@
   function saveFired(obj){
     try{ localStorage.setItem("minum_fired_v1", JSON.stringify(obj)); }catch(e){}
   }
+  function loadHistory(){
+    try{ var raw = localStorage.getItem("minum_history_v1"); return raw ? JSON.parse(raw) : []; }
+    catch(e){ return []; }
+  }
+  function saveHistory(list){
+    try{ localStorage.setItem("minum_history_v1", JSON.stringify(list)); }catch(e){}
+  }
 
   /* ================= STATE ================= */
   var state = {
     meds: loadMeds(),
-    view: "list",          // list | wizard
+    history: loadHistory(),
+    view: "list",          // list | wizard | history
     step: 1,                // 1..6
     draft: null,
+    showMenu: false,
     infoDismissed: false,
     installDismissed: false,
     toast: null,
@@ -500,6 +522,8 @@
       html += renderList();
     } else if(state.view === "wizard"){
       html = renderWizard();
+    } else if(state.view === "history"){
+      html = renderHistoryView();
     }
     root.innerHTML = html;
     if(state.toast) html = ""; // placeholder, toast appended separately below
@@ -507,16 +531,22 @@
     if(state.toast) renderToastOverlay();
     if(state.confirmDeleteId) renderDeleteModal();
     if(state.showAbout) renderAboutModal();
+    if(state.showMenu) renderMenuModal();
   }
 
   function renderTopbar(){
     return ''+
     '<div class="topbar">'+
-      '<div class="brand">'+
-        '<div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 3h6a1 1 0 011 1v2H8V4a1 1 0 011-1z" fill="#fff"/><path d="M7 8h10v10a3 3 0 01-3 3h-4a3 3 0 01-3-3V8z" fill="#fff" opacity="0.85"/><path d="M9.5 12.5h5" stroke="#2F6F5E" stroke-width="1.4" stroke-linecap="round"/></svg></div>'+
-        '<div class="brand-text"><h1>MINUM</h1><p>Monitor Ingat Notifikasi Untuk Minum obat</p></div>'+
+      '<div style="display:flex;align-items:center;gap:10px;min-width:0;">'+
+        '<button class="icon-btn" data-action="open-menu" aria-label="Menu" style="flex-shrink:0;">'+
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'+
+        '</button>'+
+        '<div class="brand">'+
+          '<div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 3h6a1 1 0 011 1v2H8V4a1 1 0 011-1z" fill="#fff"/><path d="M7 8h10v10a3 3 0 01-3 3h-4a3 3 0 01-3-3V8z" fill="#fff" opacity="0.85"/><path d="M9.5 12.5h5" stroke="#2F6F5E" stroke-width="1.4" stroke-linecap="round"/></svg></div>'+
+          '<div class="brand-text"><h1>MINUM</h1><p>Monitor Ingat Notifikasi Untuk Minum obat</p></div>'+
+        '</div>'+
       '</div>'+
-      '<button class="icon-btn" data-action="show-about" aria-label="Tentang Aplikasi">'+
+      '<button class="icon-btn" data-action="show-about" aria-label="Tentang Aplikasi" style="flex-shrink:0;">'+
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor"/></svg>'+
       '</button>'+
     '</div>';
@@ -571,6 +601,51 @@
         'Tambah Obat'+
       '</button>'+
     '</div>';
+  }
+
+  function formatHistoryDate(iso){
+    if(iso === todayISO()) return "Hari ini";
+    var y = new Date();
+    y.setDate(y.getDate()-1);
+    var yIso = y.getFullYear()+"-"+pad2(y.getMonth()+1)+"-"+pad2(y.getDate());
+    if(iso === yIso) return "Kemarin";
+    var d = new Date(iso+"T00:00:00");
+    var bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    return d.getDate()+" "+bulan[d.getMonth()]+" "+d.getFullYear();
+  }
+
+  function renderHistoryView(){
+    var html = '<div class="wiz-head">'+
+      '<button class="wiz-back" data-action="back-to-list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#1E2A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'+
+      '<div class="wiz-title">Riwayat Minum Obat</div>'+
+    '</div>';
+    html += '<div class="list" style="padding-top:16px;">';
+    if(state.history.length === 0){
+      html += '<div class="empty">'+
+        '<svg width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M12 7v5l3.5 2" stroke="#4A5A52" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="#4A5A52" stroke-width="1.6"/></svg>'+
+        '<h3>Belum ada riwayat</h3>'+
+        '<p>Riwayat minum obat akan muncul di sini<br>setiap kali Anda mengonfirmasi pengingat.</p>'+
+      '</div>';
+    } else {
+      var sorted = state.history.slice().sort(function(a,b){ return b.loggedAt - a.loggedAt; });
+      var lastDate = null;
+      sorted.forEach(function(h){
+        if(h.date !== lastDate){
+          html += '<p style="margin:10px 0 2px;font-weight:800;font-size:13px;color:var(--ink-soft);">'+formatHistoryDate(h.date)+'</p>';
+          lastDate = h.date;
+        }
+        var isTaken = h.status === "taken";
+        html += '<div class="card" style="padding:13px 16px;display:flex;align-items:center;gap:12px;">'+
+          '<div style="flex:1;min-width:0;">'+
+            '<p class="card-name" style="margin:0 0 2px;font-size:14.5px;">'+escapeHtml(h.medName)+'</p>'+
+            '<p class="card-dose" style="margin:0;">'+escapeHtml(h.dose)+' &middot; jam '+escapeHtml(h.time)+'</p>'+
+          '</div>'+
+          '<span class="chip" style="flex-shrink:0;background:'+(isTaken?'#DCEFE6':'#F7DAD3')+';color:'+(isTaken?'#1F7A4C':'#B44B3B')+';">'+(isTaken ? '&#10003; Sudah' : '&#10005; Terlewat')+'</span>'+
+        '</div>';
+      });
+    }
+    html += '</div>';
+    return html;
   }
 
   function renderList(){
@@ -777,9 +852,21 @@
     var t = state.toast;
     var el = document.createElement("div");
     el.className = "reminder-toast";
-    el.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 01-3.4 0" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>'+
-      '<div class="txt"><h4>Waktunya minum obat</h4><p>'+escapeHtml(t.name)+' &middot; '+escapeHtml(t.dose)+' &middot; '+escapeHtml(instructionLabel(t.instruction))+'</p></div>'+
-      '<button data-action="dismiss-toast">Oke</button>';
+    if(t.stage === "confirm"){
+      el.innerHTML =
+        '<div class="txt" style="flex:1;">'+
+          '<h4>Sudah minum obat ini?</h4>'+
+          '<p>'+escapeHtml(t.name)+' &middot; jam '+escapeHtml(t.time)+'</p>'+
+          '<div class="confirm-actions">'+
+            '<button class="btn-taken" data-action="log-taken">&#10003; Sudah</button>'+
+            '<button class="btn-missed" data-action="log-missed">&#10005; Terlewat</button>'+
+          '</div>'+
+        '</div>';
+    } else {
+      el.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 01-3.4 0" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>'+
+        '<div class="txt"><h4>Waktunya minum obat</h4><p>'+escapeHtml(t.name)+' &middot; '+escapeHtml(t.dose)+' &middot; '+escapeHtml(instructionLabel(t.instruction))+'</p></div>'+
+        '<button data-action="ack-reminder">Oke</button>';
+    }
     document.body.appendChild(el);
     el.querySelectorAll("[data-action]").forEach(function(btn){
       btn.addEventListener("click", onAction);
@@ -810,10 +897,34 @@
     el.innerHTML = '<div class="modal">'+
       '<h3>Tentang MINUM</h3>'+
       '<p><strong>MINUM</strong> &mdash; Monitor Ingat Notifikasi Untuk Minum obat.</p>'+
-      '<p>Versi 1.11</p>'+
+      '<p>Versi 1.12</p>'+
       '<p>Dibuat oleh Richard &middot; 2 September 2026.</p>'+
       '<div class="modal-actions">'+
         '<button class="modal-cancel" style="flex:1;" data-action="close-about">Tutup</button>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(el);
+    el.querySelectorAll("[data-action]").forEach(function(btn){
+      btn.addEventListener("click", onAction);
+    });
+  }
+
+
+  function renderMenuModal(){
+    var el = document.createElement("div");
+    el.className = "overlay";
+    el.innerHTML = '<div class="modal">'+
+      '<h3>Menu</h3>'+
+      '<div class="menu-row" data-action="menu-add">'+
+        '<div class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></div>'+
+        '<span>Tambah Obat</span>'+
+      '</div>'+
+      '<div class="menu-row" data-action="menu-history">'+
+        '<div class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg></div>'+
+        '<span>Riwayat Minum Obat</span>'+
+      '</div>'+
+      '<div class="modal-actions" style="margin-top:14px;">'+
+        '<button class="modal-cancel" style="flex:1;" data-action="close-menu">Batal</button>'+
       '</div>'+
     '</div>';
     document.body.appendChild(el);
@@ -971,6 +1082,32 @@
         state.showAbout = true;
         render();
         break;
+      case "open-menu":
+        state.showMenu = true;
+        render();
+        break;
+      case "close-menu":
+        state.showMenu = false;
+        document.querySelectorAll(".overlay").forEach(function(o){o.remove();});
+        break;
+      case "menu-add":
+        state.showMenu = false;
+        document.querySelectorAll(".overlay").forEach(function(o){o.remove();});
+        state.draft = freshDraft();
+        state.step = 1;
+        state.view = "wizard";
+        render();
+        break;
+      case "menu-history":
+        state.showMenu = false;
+        document.querySelectorAll(".overlay").forEach(function(o){o.remove();});
+        state.view = "history";
+        render();
+        break;
+      case "back-to-list":
+        state.view = "list";
+        render();
+        break;
       case "dismiss-install":
         state.installDismissed = true;
         render();
@@ -979,11 +1116,34 @@
         state.infoDismissed = true;
         render();
         break;
-      case "dismiss-toast":
+      case "ack-reminder":
+        document.querySelectorAll(".reminder-toast").forEach(function(o){o.remove();});
+        state.toast.stage = "confirm";
+        renderToastOverlay();
+        break;
+      case "log-taken":
+      case "log-missed":
+        var t = state.toast;
+        if(t){
+          state.history.push({
+            id: Date.now(),
+            medId: t.medId,
+            medName: t.name,
+            dose: t.dose,
+            instruction: t.instruction,
+            time: t.time,
+            date: t.date,
+            status: action === "log-taken" ? "taken" : "missed",
+            loggedAt: Date.now()
+          });
+          saveHistory(state.history);
+        }
         state.toast = null;
         document.querySelectorAll(".reminder-toast").forEach(function(o){o.remove();});
+        if(state.view === "history"){ render(); }
         break;
     }
+
   }
 
   function normalizeForm(f){
@@ -1101,7 +1261,7 @@
         });
       }catch(e){}
     }
-    state.toast = { name: med.name, dose: doseTxt, instruction: med.instruction };
+    state.toast = { stage: "reminder", medId: med.id, name: med.name, dose: doseTxt, instruction: med.instruction, time: time, date: todayISO() };
     playBeep();
     render();
   }
