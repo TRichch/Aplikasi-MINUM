@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>MINUM — Pengingat Obat</title>
+<style>
+  :root{
+    --sage-50:#F1F7F3;
+    --sage-100:#E3EEE7;
+    --ink:#1E2A24;
+    --ink-soft:#4A5A52;
+    --teal:#2F6F5E;
+    --teal-dark:#204B40;
+    --amber:#E2812E;
+    --amber-soft:#FBEBDA;
+    --white:#FFFFFF;
+    --line:#D9E5DE;
+    --danger:#B44B3B;
+    --shadow: 0 1px 2px rgba(30,42,36,0.06), 0 4px 14px rgba(30,42,36,0.06);
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-sm: 9px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--sage-50);
+    color: var(--ink);
+    min-height:100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--sage-50);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    padding-bottom: 24px;
+  }
+
+  /* ---------- Header ---------- */
+  .topbar{
+    padding: 22px 20px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-mark{
+    width:38px;height:38px;border-radius:11px;
+    background: var(--teal);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:20px;height:20px;}
+  .brand-text h1{
+    margin:0; font-size:21px; letter-spacing:0.2px; color:var(--teal-dark); font-weight:800;
+  }
+  .brand-text p{
+    margin:0; font-size:11.5px; color:var(--ink-soft); font-weight:600;
+  }
+  .icon-btn{
+    width:38px;height:38px;border-radius:50%;
+    border:1px solid var(--line); background:var(--white);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Banners ---------- */
+  .banner{
+    margin: 0 20px 14px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    line-height:1.45;
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .banner-info{ background: var(--amber-soft); color:#7A4E17; }
+  .banner-info button{
+    margin-top:6px; border:none; background:var(--amber); color:#fff;
+    padding:6px 12px; border-radius:999px; font-weight:700; font-size:12.5px; cursor:pointer;
+  }
+  .banner svg{flex-shrink:0; margin-top:1px;}
+
+  /* ---------- Add button ---------- */
+  .add-row{ padding: 0 20px 14px; }
+  .btn-add{
+    width:100%;
+    background: var(--teal);
+    color:#fff;
+    border:none;
+    padding:14px 16px;
+    border-radius: var(--radius-md);
+    font-size:15px;
+    font-weight:800;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    cursor:pointer;
+    box-shadow: var(--shadow);
+  }
+  .btn-add:active{ transform: scale(0.98); }
+
+  /* ---------- Med list ---------- */
+  .list{ padding: 0 20px; display:flex; flex-direction:column; gap:12px; flex:1; }
+  .empty{
+    text-align:center;
+    padding: 46px 20px;
+    color: var(--ink-soft);
+  }
+  .empty svg{ margin-bottom: 14px; opacity:0.7; }
+  .empty h3{ margin:0 0 6px; color:var(--ink); font-size:16px; }
+  .empty p{ margin:0; font-size:13.5px; line-height:1.5; }
+
+  .card{
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-top{ display:flex; justify-content:space-between; gap:10px; }
+  .card-name{ font-size:16px; font-weight:800; color:var(--ink); margin:0 0 3px; }
+  .card-dose{ font-size:13px; color:var(--ink-soft); font-weight:600; margin:0; }
+  .card-menu{ background:none; border:none; color:var(--ink-soft); cursor:pointer; padding:4px; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .chip{
+    font-size:11.5px; font-weight:700; padding:5px 10px; border-radius:999px;
+    background: var(--sage-100); color: var(--teal-dark);
+  }
+  .chip-time{ background: var(--teal); color:#fff; }
+  .card-actions{ display:flex; gap:8px; margin-top:14px; }
+  .btn-ghost{
+    flex:1; background:none; border:1px solid var(--line); color:var(--ink-soft);
+    padding:9px; border-radius:var(--radius-sm); font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .btn-ghost.danger{ color: var(--danger); border-color:#EFD3CC; }
+
+  /* ---------- Wizard ---------- */
+  .wizard{
+    position:fixed; inset:0; background: var(--sage-50); z-index:50;
+    max-width:480px; margin:0 auto;
+    display:flex; flex-direction:column;
+  }
+  .wiz-head{
+    padding: 18px 16px 12px; display:flex; align-items:center; gap:10px;
+    border-bottom: 1px solid var(--line); background: var(--white);
+  }
+  .wiz-back{ background:none; border:none; color:var(--ink); cursor:pointer; padding:6px; }
+  .wiz-title{ font-size:15px; font-weight:800; color:var(--ink); flex:1; }
+  .wiz-dots{ display:flex; gap:5px; padding: 12px 16px 0; }
+  .dot{ height:5px; flex:1; border-radius:3px; background:var(--line); }
+  .dot.active{ background: var(--teal); }
+  .dot.done{ background: var(--teal); opacity:0.5; }
+  .wiz-body{ flex:1; overflow-y:auto; padding: 18px 20px 100px; }
+  .wiz-foot{
+    position:absolute; bottom:0; left:0; right:0;
+    padding: 14px 20px 20px; background: linear-gradient(to top, var(--sage-50) 60%, transparent);
+  }
+  .step-label{ font-size:19px; font-weight:800; margin:0 0 4px; color:var(--ink); }
+  .step-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 18px; line-height:1.5; }
+
+  .search-box{
+    display:flex; align-items:center; gap:8px;
+    background:var(--white); border:1.5px solid var(--line); border-radius: var(--radius-md);
+    padding: 12px 14px; margin-bottom:14px;
+  }
+  .search-box input{
+    border:none; outline:none; flex:1; font-size:15px; font-family:inherit; background:transparent; color:var(--ink);
+  }
+  .drug-item{
+    background:var(--white); border:1px solid var(--line); border-radius:var(--radius-md);
+    padding:13px 14px; margin-bottom:9px; cursor:pointer;
+  }
+  .drug-item:active{ background: var(--sage-100); }
+  .drug-name{ font-weight:800; font-size:14.5px; margin:0 0 2px; }
+  .drug-meta{ font-size:12.5px; color:var(--ink-soft); margin:0; }
+  .manual-link{
+    text-align:center; padding:14px; color:var(--teal-dark); font-weight:700; font-size:13.5px;
+    text-decoration:underline; cursor:pointer;
+  }
+  .no-result{ text-align:center; padding:24px 10px; color:var(--ink-soft); font-size:13.5px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{ display:block; font-size:13px; font-weight:800; color:var(--ink); margin-bottom:7px; }
+  .field input[type=text], .field input[type=number], .field select, .field input[type=time], .field input[type=date]{
+    width:100%; padding:12px 13px; border-radius: var(--radius-sm); border:1.5px solid var(--line);
+    font-size:15px; font-family:inherit; background:var(--white); color:var(--ink);
+  }
+  .row-2{ display:flex; gap:10px; }
+  .row-2 > *{ flex:1; }
+
+  .segmented{ display:flex; background:var(--sage-100); border-radius:999px; padding:4px; margin-bottom:14px; }
+  .segmented button{
+    flex:1; border:none; background:none; padding:9px 6px; border-radius:999px;
+    font-weight:800; font-size:13px; color:var(--ink-soft); cursor:pointer;
+  }
+  .segmented button.active{ background:var(--white); color:var(--teal-dark); box-shadow: var(--shadow); }
+
+  .day-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .day-chip{
+    padding:9px 0; width:45px; text-align:center; border-radius:10px; border:1.5px solid var(--line);
+    background:var(--white); font-size:12.5px; font-weight:800; color:var(--ink-soft); cursor:pointer;
+  }
+  .day-chip.active{ background:var(--teal); border-color:var(--teal); color:#fff; }
+
+  .time-slot{
+    display:flex; align-items:center; gap:10px; background:var(--white); border:1.5px solid var(--line);
+    border-radius:var(--radius-sm); padding:11px 13px; margin-bottom:9px;
+  }
+  .time-slot span{ font-size:13px; font-weight:800; color:var(--ink-soft); min-width:56px; }
+  .time-slot input{ border:none; outline:none; font-size:16px; font-family:inherit; flex:1; background:transparent; color:var(--ink); }
+
+  .radio-card{
+    display:flex; align-items:center; gap:11px; background:var(--white); border:1.5px solid var(--line);
+    border-radius: var(--radius-md); padding:13px 14px; margin-bottom:9px; cursor:pointer;
+  }
+  .radio-card.active{ border-color:var(--teal); background:var(--sage-100); }
+  .radio-dot{ width:18px; height:18px; border-radius:50%; border:2px solid var(--line); flex-shrink:0; position:relative; }
+  .radio-card.active .radio-dot{ border-color:var(--teal); }
+  .radio-card.active .radio-dot::after{
+    content:''; position:absolute; inset:3px; background:var(--teal); border-radius:50%;
+  }
+  .radio-text{ font-size:14px; font-weight:700; color:var(--ink); }
+
+  .summary-box{ background:var(--white); border:1px solid var(--line); border-radius: var(--radius-lg); padding:16px; }
+  .summary-row{ display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--sage-100); font-size:13.5px; }
+  .summary-row:last-child{ border-bottom:none; }
+  .summary-row .k{ color:var(--ink-soft); font-weight:700; }
+  .summary-row .v{ color:var(--ink); font-weight:800; text-align:right; }
+
+  .btn-primary{
+    width:100%; background:var(--teal); color:#fff; border:none; padding:15px; border-radius:var(--radius-md);
+    font-size:15.5px; font-weight:800; cursor:pointer; box-shadow:var(--shadow);
+  }
+  .btn-primary:disabled{ opacity:0.45; }
+  .btn-primary:active{ transform:scale(0.98); }
+  .error-text{ color:var(--danger); font-size:12.5px; font-weight:700; margin-top:6px; }
+
+  /* ---------- Modal / toast ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(30,42,36,0.45); z-index:100;
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  .modal{
+    background:var(--white); width:100%; max-width:480px; border-radius: 24px 24px 0 0;
+    padding: 22px 20px 28px; box-shadow: 0 -4px 30px rgba(0,0,0,0.2);
+  }
+  .modal h3{ margin:0 0 8px; font-size:17px; color:var(--ink); }
+  .modal p{ margin:0 0 16px; font-size:13.5px; color:var(--ink-soft); line-height:1.55; }
+  .modal-actions{ display:flex; gap:10px; }
+  .modal-actions button{ flex:1; padding:12px; border-radius:var(--radius-sm); font-weight:800; font-size:14px; cursor:pointer; border:none;}
+  .modal-cancel{ background:var(--sage-100); color:var(--ink); }
+  .modal-confirm{ background:var(--danger); color:#fff; }
+
+  .reminder-toast{
+    position:fixed; top:16px; left:16px; right:16px; max-width:448px; margin:0 auto; z-index:200;
+    background: var(--teal-dark); color:#fff; border-radius: var(--radius-lg); padding:16px 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .reminder-toast .txt{ flex:1; }
+  .reminder-toast h4{ margin:0 0 3px; font-size:14.5px; }
+  .reminder-toast p{ margin:0; font-size:12.5px; opacity:0.9; }
+  .reminder-toast button{
+    background:rgba(255,255,255,0.15); border:none; color:#fff; padding:8px 12px; border-radius:999px;
+    font-weight:800; font-size:12px; cursor:pointer; flex-shrink:0;
+  }
+
+  ::-webkit-scrollbar{ display:none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= DATA: contoh obat (BUKAN database resmi lengkap) ================= */
+  var DRUG_DB = [
+    {name:"Paracetamol", brand:"Panadol / Sanmol / Bodrex", dose:"500 mg", form:"tablet"},
+    {name:"Paracetamol Sirup", brand:"Sanmol / Tempra", dose:"120 mg/5ml", form:"ml"},
+    {name:"Ibuprofen", brand:"Proris / Bufect", dose:"400 mg", form:"tablet"},
+    {name:"Amoxicillin", brand:"Amoxsan / Yusimox", dose:"500 mg", form:"kapsul"},
+    {name:"Amoxicillin Sirup", brand:"Generik", dose:"125 mg/5ml", form:"ml"},
+    {name:"Cetirizine", brand:"Incidal / Generik", dose:"10 mg", form:"tablet"},
+    {name:"Loratadine", brand:"Claritin", dose:"10 mg", form:"tablet"},
+    {name:"Omeprazole", brand:"Losec / Generik", dose:"20 mg", form:"kapsul"},
+    {name:"Ranitidine", brand:"Generik", dose:"150 mg", form:"tablet"},
+    {name:"Metformin", brand:"Glucophage", dose:"500 mg", form:"tablet"},
+    {name:"Metformin", brand:"Glucophage", dose:"850 mg", form:"tablet"},
+    {name:"Amlodipine", brand:"Norvask", dose:"5 mg", form:"tablet"},
+    {name:"Amlodipine", brand:"Norvask", dose:"10 mg", form:"tablet"},
+    {name:"Captopril", brand:"Generik", dose:"25 mg", form:"tablet"},
+    {name:"Simvastatin", brand:"Generik", dose:"10 mg", form:"tablet"},
+    {name:"Simvastatin", brand:"Generik", dose:"20 mg", form:"tablet"},
+    {name:"Dexamethasone", brand:"Generik", dose:"0.5 mg", form:"tablet"},
+    {name:"Domperidone", brand:"Motilium", dose:"10 mg", form:"tablet"},
+    {name:"Antasida DOEN", brand:"Generik", dose:"200 mg", form:"tablet kunyah"},
+    {name:"Diapet", brand:"Diapet", dose:"1 kapsul", form:"kapsul"},
+    {name:"Oralit", brand:"Generik", dose:"1 sachet", form:"sachet"},
+    {name:"Vitamin C", brand:"Generik", dose:"500 mg", form:"tablet"},
+    {name:"Vitamin B Complex", brand:"Generik", dose:"1 tablet", form:"tablet"},
+    {name:"Vitamin D3", brand:"Generik", dose:"1000 IU", form:"tablet"},
+    {name:"Zinc Sulfate", brand:"Generik", dose:"20 mg", form:"tablet"},
+    {name:"Salbutamol Inhaler", brand:"Ventolin", dose:"100 mcg/semprot", form:"semprot/inhalasi"},
+    {name:"Salbutamol", brand:"Generik", dose:"2 mg", form:"tablet"},
+    {name:"Metronidazole", brand:"Generik", dose:"500 mg", form:"tablet"},
+    {name:"Ciprofloxacin", brand:"Generik", dose:"500 mg", form:"tablet"},
+    {name:"Dexamethasone Tetes Mata", brand:"Generik", dose:"1 tetes", form:"tetes"},
+    {name:"Chloramphenicol Salep Mata", brand:"Generik", dose:"1%", form:"lainnya"},
+    {name:"Bisacodyl", brand:"Dulcolax", dose:"5 mg", form:"tablet"},
+    {name:"Bisacodyl Suppositoria", brand:"Dulcolax", dose:"10 mg", form:"suppositoria"},
+    {name:"Aspirin", brand:"Aspilet", dose:"80 mg", form:"tablet"},
+    {name:"Clopidogrel", brand:"Plavix", dose:"75 mg", form:"tablet"},
+    {name:"Furosemide", brand:"Lasix", dose:"40 mg", form:"tablet"},
+    {name:"Allopurinol", brand:"Generik", dose:"100 mg", form:"tablet"},
+    {name:"Methylprednisolone", brand:"Medrol", dose:"4 mg", form:"tablet"},
+    {name:"Ondansetron", brand:"Generik", dose:"4 mg", form:"tablet"}
+  ];
+
+  var FORM_OPTIONS = ["tablet","kapsul","ml","sendok takar","tetes","sachet","suppositoria","semprot/inhalasi","unit (injeksi)","lainnya"];
+  var DAY_NAMES = ["Sen","Sel","Rab","Kam","Jum","Sab","Min"];
+  var DAY_FULL = ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"];
+  var INSTRUCTION_OPTIONS = [
+    {id:"sebelum_makan", label:"Sebelum makan"},
+    {id:"saat_makan", label:"Saat makan"},
+    {id:"setelah_makan", label:"Setelah makan"},
+    {id:"sebelum_tidur", label:"Sebelum tidur"},
+    {id:"setelah_bangun", label:"Setelah bangun tidur"}
+  ];
+
+  /* ================= STORAGE ================= */
+  var storageOk = true;
+  function loadMeds(){
+    try{
+      var raw = localStorage.getItem("minum_meds_v1");
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ storageOk = false; return []; }
+  }
+  function saveMeds(list){
+    try{ localStorage.setItem("minum_meds_v1", JSON.stringify(list)); }
+    catch(e){ storageOk = false; }
+  }
+  function loadFired(){
+    try{ var raw = localStorage.getItem("minum_fired_v1"); return raw ? JSON.parse(raw) : {}; }
+    catch(e){ return {}; }
+  }
+  function saveFired(obj){
+    try{ localStorage.setItem("minum_fired_v1", JSON.stringify(obj)); }catch(e){}
+  }
+
+  /* ================= STATE ================= */
+  var state = {
+    meds: loadMeds(),
+    view: "list",          // list | wizard
+    step: 1,                // 1..6
+    draft: null,
+    infoDismissed: (function(){ try{ return localStorage.getItem("minum_info_dismissed")==="1"; }catch(e){ return false; } })(),
+    toast: null,
+    confirmDeleteId: null,
+    fired: loadFired(),
+    notifStatus: (typeof Notification !== "undefined") ? Notification.permission : "unsupported"
+  };
+
+  function freshDraft(){
+    return {
+      id: null,
+      name: "", brand: "", form: "tablet",
+      doseAmount: "", doseUnit: "tablet",
+      periodType: "everyday",   // everyday | custom
+      days: [],
+      timesPerDay: 1,
+      times: [""],
+      instruction: "sebelum_makan",
+      durationUnit: "hari",
+      durationValue: 7,
+      searchQuery: ""
+    };
+  }
+
+  function isAndroid(){
+    return /Android/i.test(navigator.userAgent || "");
+  }
+  function buildAlarmIntentUri(hhmm, label){
+    var parts = hhmm.split(":");
+    var hour = parseInt(parts[0],10);
+    var minute = parseInt(parts[1],10);
+    if(isNaN(hour) || isNaN(minute)) return null;
+    return "intent:#Intent;action=android.intent.action.SET_ALARM;S.android.intent.extra.alarm.MESSAGE="+encodeURIComponent(label)+";i.android.intent.extra.alarm.HOUR="+hour+";i.android.intent.extra.alarm.MINUTES="+minute+";end";
+  }
+  function pad2(n){ return n < 10 ? "0"+n : ""+n; }
+  function todayISO(){ var d = new Date(); return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+  function addToDate(dateStr, value, unit){
+    var d = new Date(dateStr+"T00:00:00");
+    if(unit === "hari") d.setDate(d.getDate()+value);
+    else if(unit === "minggu") d.setDate(d.getDate()+value*7);
+    else if(unit === "bulan") d.setMonth(d.getMonth()+value);
+    else if(unit === "tahun") d.setFullYear(d.getFullYear()+value);
+    return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+  }
+  function durationOptions(unit){
+    var max = unit==="hari" ? 31 : unit==="minggu" ? 52 : unit==="bulan" ? 12 : 1;
+    var arr = [];
+    for(var i=1;i<=max;i++) arr.push(i);
+    return arr;
+  }
+  function instructionLabel(id){
+    for(var i=0;i<INSTRUCTION_OPTIONS.length;i++) if(INSTRUCTION_OPTIONS[i].id===id) return INSTRUCTION_OPTIONS[i].label;
+    return id;
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  /* ================= RENDER ================= */
+  var root = document.getElementById("app");
+
+  function render(){
+    var html = "";
+    if(state.view === "list"){
+      html += renderTopbar();
+      if(!state.infoDismissed) html += renderInfoBanner();
+      html += renderAddButton();
+      html += renderList();
+    } else if(state.view === "wizard"){
+      html = renderWizard();
+    }
+    root.innerHTML = html;
+    if(state.toast) html = ""; // placeholder, toast appended separately below
+    attachHandlers();
+    if(state.toast) renderToastOverlay();
+    if(state.confirmDeleteId) renderDeleteModal();
+  }
+
+  function renderTopbar(){
+    return ''+
+    '<div class="topbar">'+
+      '<div class="brand">'+
+        '<div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 3h6a1 1 0 011 1v2H8V4a1 1 0 011-1z" fill="#fff"/><path d="M7 8h10v10a3 3 0 01-3 3h-4a3 3 0 01-3-3V8z" fill="#fff" opacity="0.85"/><path d="M9.5 12.5h5" stroke="#2F6F5E" stroke-width="1.4" stroke-linecap="round"/></svg></div>'+
+        '<div class="brand-text"><h1>MINUM</h1><p>Monitor Ingat Notifikasi Untuk Minum obat</p></div>'+
+      '</div>'+
+      '<button class="icon-btn" data-action="show-info" aria-label="Info">'+
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor"/></svg>'+
+      '</button>'+
+    '</div>';
+  }
+
+  function renderInfoBanner(){
+    var statusMsg = "";
+    if(state.notifStatus === "granted") statusMsg = "&#10003; Notifikasi sistem aktif.";
+    else if(state.notifStatus === "denied") statusMsg = "Notifikasi diblokir oleh browser. Buka Pengaturan browser &rarr; Situs ini/Notifikasi, lalu izinkan secara manual. Pop-up &amp; suara di dalam aplikasi tetap akan berfungsi tanpa ini.";
+    else if(state.notifStatus === "unsupported") statusMsg = "Browser ini tidak mendukung notifikasi sistem untuk file yang dibuka langsung (bukan dari https). Tenang — pop-up &amp; suara pengingat di dalam aplikasi tetap akan muncul selama aplikasi ini dibuka.";
+
+    return ''+
+    '<div class="banner banner-info">'+
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 9v5" stroke="#7A4E17" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="#7A4E17"/><path d="M10.3 3.9L2.6 17.5c-.5.9.1 2 1.2 2h16.4c1.1 0 1.7-1.1 1.2-2L13.7 3.9c-.6-1-2-1-2.6 0z" stroke="#7A4E17" stroke-width="1.6"/></svg>'+
+      '<div>'+
+        'Pengingat utama adalah pop-up + suara di dalam aplikasi ini, dan itu hanya berbunyi selama aplikasi dibuka (di layar depan/latar). Jangan tutup paksa browser saat jam minum obat mendekat. Untuk pengingat yang tetap bunyi walau aplikasi ditutup, gunakan tombol &ldquo;Alarm HP&rdquo; di tiap kartu obat (khusus Android).'+
+        (statusMsg ? '<div style="margin-top:8px;font-weight:700;">'+statusMsg+'</div>' : '')+
+        (state.notifStatus === "granted" ? '' : '<div><button data-action="request-permission">Coba aktifkan notifikasi sistem</button></div>')+
+      '</div>'+
+    '</div>';
+  }
+
+  function renderAddButton(){
+    return ''+
+    '<div class="add-row">'+
+      '<button class="btn-add" data-action="open-wizard">'+
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>'+
+        'Tambah Obat'+
+      '</button>'+
+    '</div>';
+  }
+
+  function renderList(){
+    if(state.meds.length === 0){
+      return ''+
+      '<div class="list"><div class="empty">'+
+        '<svg width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M7 8h10v10a3 3 0 01-3 3h-4a3 3 0 01-3-3V8z" stroke="#4A5A52" stroke-width="1.6"/><path d="M9 3h6a1 1 0 011 1v4H8V4a1 1 0 011-1z" stroke="#4A5A52" stroke-width="1.6"/><path d="M9.5 12.5h5" stroke="#4A5A52" stroke-width="1.4" stroke-linecap="round"/></svg>'+
+        '<h3>Belum ada obat terdaftar</h3>'+
+        '<p>Ketuk "Tambah Obat" di atas untuk<br>mendaftarkan obat pertama Anda.</p>'+
+      '</div></div>';
+    }
+    var html = '<div class="list">';
+    state.meds.forEach(function(m){
+      var doseTxt = m.doseAmount + " " + m.doseUnit;
+      html += '<div class="card">'+
+        '<div class="card-top">'+
+          '<div><p class="card-name">'+escapeHtml(m.name)+'</p><p class="card-dose">'+escapeHtml(doseTxt)+' &middot; '+escapeHtml(instructionLabel(m.instruction))+'</p></div>'+
+        '</div>'+
+        '<div class="chip-row">'+
+          (m.periodType==="everyday" ? '<span class="chip">Setiap hari</span>' : m.days.map(function(d){return '<span class="chip">'+d+'</span>';}).join(''))+
+          m.times.map(function(t){return '<span class="chip chip-time">'+t+'</span>';}).join('')+
+        '</div>'+
+        (isAndroid() ? (
+          '<div style="margin-top:11px;">'+
+            '<p style="margin:0 0 6px;font-size:11.5px;font-weight:800;color:var(--ink-soft);">Alarm HP asli (tetap bunyi walau aplikasi ditutup)</p>'+
+            '<div class="chip-row">'+
+              m.times.map(function(t){
+                var uri = buildAlarmIntentUri(t, "Minum " + m.name);
+                return '<a href="'+uri+'" class="btn-ghost" style="flex:none;padding:7px 11px;font-size:12px;text-decoration:none;display:inline-block;">&#9200; '+t+'</a>';
+              }).join('')+
+            '</div>'+
+            '<p style="margin:6px 0 0;font-size:11px;color:var(--ink-soft);">Kalau tombol di atas tidak membuka aplikasi Jam, atur manual di aplikasi Jam bawaan HP dengan jam yang sama.</p>'+
+          '</div>'
+        ) : '')+
+        '<div class="card-actions">'+
+          '<button class="btn-ghost danger" data-action="ask-delete" data-id="'+m.id+'">Hapus</button>'+
+        '</div>'+
+      '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function renderWizard(){
+    var d = state.draft;
+    var stepTitles = ["","Pilih Obat","Dosis","Periode Minum","Frekuensi & Jam","Aturan Minum","Lama Konsumsi"];
+    var html = '<div class="wizard">';
+    html += '<div class="wiz-head">'+
+      '<button class="wiz-back" data-action="wiz-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#1E2A24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'+
+      '<div class="wiz-title">'+stepTitles[state.step]+'</div>'+
+    '</div>';
+    html += '<div class="wiz-dots">';
+    for(var i=1;i<=6;i++){
+      html += '<div class="dot '+(i===state.step?'active':(i<state.step?'done':''))+'"></div>';
+    }
+    html += '</div>';
+    html += '<div class="wiz-body">';
+
+    if(state.step===1) html += renderStep1();
+    if(state.step===2) html += renderStep2();
+    if(state.step===3) html += renderStep3();
+    if(state.step===4) html += renderStep4();
+    if(state.step===5) html += renderStep5();
+    if(state.step===6) html += renderStep6();
+
+    html += '</div>';
+
+    if(state.step>=2 && state.step<=5){
+      var ok = validateStep(state.step);
+      html += '<div class="wiz-foot"><button class="btn-primary" data-action="wiz-next" '+(ok?'':'disabled')+'>Lanjut</button></div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function renderStep1(){
+    var d = state.draft;
+    var q = d.searchQuery.trim().toLowerCase();
+    var results = q.length===0 ? [] : DRUG_DB.filter(function(item){
+      return item.name.toLowerCase().indexOf(q)>-1 || item.brand.toLowerCase().indexOf(q)>-1;
+    }).slice(0,20);
+
+    var html = '<p class="step-sub">Ketik nama obat (generik atau merek dagang). Daftar ini adalah contoh umum, bukan basis data resmi lengkap — bila tidak ditemukan, gunakan input manual.</p>';
+    html += '<div class="search-box">'+
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#4A5A52" stroke-width="1.8"/><path d="M21 21l-4-4" stroke="#4A5A52" stroke-width="1.8" stroke-linecap="round"/></svg>'+
+      '<input type="text" id="drugSearch" placeholder="Contoh: paracetamol, amoxicillin..." value="'+escapeHtml(d.searchQuery)+'">'+
+    '</div>';
+
+    if(q.length>0){
+      if(results.length===0){
+        html += '<div class="no-result">Tidak ditemukan untuk &ldquo;'+escapeHtml(d.searchQuery)+'&rdquo;.</div>';
+      } else {
+        results.forEach(function(item, idx){
+          html += '<div class="drug-item" data-action="pick-drug" data-idx="'+DRUG_DB.indexOf(item)+'">'+
+            '<p class="drug-name">'+escapeHtml(item.name)+' '+escapeHtml(item.dose)+'</p>'+
+            '<p class="drug-meta">'+escapeHtml(item.brand)+' &middot; '+escapeHtml(item.form)+'</p>'+
+          '</div>';
+        });
+      }
+    }
+    html += '<div class="manual-link" data-action="manual-entry">Tidak ditemukan? Input nama obat manual</div>';
+    return html;
+  }
+
+  function renderStep2(){
+    var d = state.draft;
+    var html = '<p class="step-sub">Obat terpilih: <strong>'+escapeHtml(d.name)+'</strong>'+(d.brand?' ('+escapeHtml(d.brand)+')':'')+'</p>';
+    html += '<div class="field"><label>Nama obat</label><input type="text" id="fieldName" value="'+escapeHtml(d.name)+'" placeholder="Nama obat"></div>';
+    html += '<div class="row-2">'+
+      '<div class="field"><label>Jumlah dosis</label><input type="number" min="0" step="0.5" id="fieldDoseAmount" value="'+escapeHtml(d.doseAmount)+'" placeholder="cth: 1"></div>'+
+      '<div class="field"><label>Satuan</label><select id="fieldDoseUnit">'+
+        FORM_OPTIONS.map(function(f){ return '<option value="'+f+'" '+(d.doseUnit===f?'selected':'')+'>'+f+'</option>'; }).join('')+
+      '</select></div>'+
+    '</div>';
+    if(!d.doseAmount) html += '<p class="error-text" id="step2Error" style="display:none;">Isi jumlah dosis terlebih dahulu.</p>';
+    return html;
+  }
+
+  function renderStep3(){
+    var d = state.draft;
+    var html = '<p class="step-sub">Pilih hari obat ini perlu diminum.</p>';
+    html += '<div class="segmented">'+
+      '<button data-action="set-period" data-val="everyday" class="'+(d.periodType==="everyday"?"active":"")+'">Setiap hari</button>'+
+      '<button data-action="set-period" data-val="custom" class="'+(d.periodType==="custom"?"active":"")+'">Hari tertentu</button>'+
+    '</div>';
+    if(d.periodType==="custom"){
+      html += '<div class="day-grid">';
+      DAY_NAMES.forEach(function(day){
+        html += '<div class="day-chip '+(d.days.indexOf(day)>-1?"active":"")+'" data-action="toggle-day" data-day="'+day+'">'+day+'</div>';
+      });
+      html += '</div>';
+      if(d.days.length===0) html += '<p class="error-text">Pilih minimal satu hari.</p>';
+    }
+    return html;
+  }
+
+  function renderStep4(){
+    var d = state.draft;
+    var html = '<p class="step-sub">Berapa kali sehari obat ini diminum? Jam akan menyesuaikan jumlah tersebut.</p>';
+    html += '<div class="field"><label>Frekuensi per hari</label><select id="fieldFreq">';
+    for(var i=1;i<=5;i++) html += '<option value="'+i+'" '+(d.timesPerDay==i?"selected":"")+'>'+i+'x sehari</option>';
+    html += '</select></div>';
+    html += '<div class="field"><label>Jam minum</label>';
+    for(var j=0;j<d.timesPerDay;j++){
+      html += '<div class="time-slot"><span>Ke-'+(j+1)+'</span><input type="time" data-idx="'+j+'" class="timeInput" value="'+(d.times[j]||"")+'"></div>';
+    }
+    html += '</div>';
+    var emptyTimes = d.times.slice(0,d.timesPerDay).some(function(t){return !t;});
+    if(emptyTimes) html += '<p class="error-text">Isi semua jam sebelum lanjut.</p>';
+    return html;
+  }
+
+  function renderStep5(){
+    var d = state.draft;
+    var html = '<p class="step-sub">Kapan sebaiknya obat ini diminum relatif terhadap makan/tidur?</p>';
+    INSTRUCTION_OPTIONS.forEach(function(opt){
+      html += '<div class="radio-card '+(d.instruction===opt.id?"active":"")+'" data-action="set-instruction" data-val="'+opt.id+'">'+
+        '<div class="radio-dot"></div><div class="radio-text">'+opt.label+'</div>'+
+      '</div>';
+    });
+    return html;
+  }
+
+  function renderStep6(){
+    var d = state.draft;
+    var html = '<p class="step-sub">Berapa lama obat ini perlu dikonsumsi?</p>';
+    html += '<div class="row-2">'+
+      '<div class="field"><label>Jumlah</label><select id="fieldDurValue">'+
+        durationOptions(d.durationUnit).map(function(n){ return '<option value="'+n+'" '+(d.durationValue==n?"selected":"")+'>'+n+'</option>'; }).join('')+
+      '</select></div>'+
+      '<div class="field"><label>Satuan</label><select id="fieldDurUnit">'+
+        ["hari","minggu","bulan","tahun"].map(function(u){ return '<option value="'+u+'" '+(d.durationUnit===u?"selected":"")+'>'+u+'</option>'; }).join('')+
+      '</select></div>'+
+    '</div>';
+
+    html += '<div class="summary-box">'+
+      summaryRow("Obat", d.name + (d.doseAmount? " ("+d.doseAmount+" "+d.doseUnit+")":""))+
+      summaryRow("Periode", d.periodType==="everyday" ? "Setiap hari" : d.days.join(", "))+
+      summaryRow("Frekuensi", d.timesPerDay + "x sehari")+
+      summaryRow("Jam", d.times.slice(0,d.timesPerDay).join(", "))+
+      summaryRow("Aturan", instructionLabel(d.instruction))+
+      summaryRow("Lama", d.durationValue + " " + d.durationUnit)+
+    '</div>';
+
+    html += '<div style="height:16px"></div><button class="btn-primary" data-action="finish">Selesai &amp; Ingatkan</button>';
+    return html;
+  }
+
+  function summaryRow(k,v){
+    return '<div class="summary-row"><span class="k">'+escapeHtml(k)+'</span><span class="v">'+escapeHtml(v)+'</span></div>';
+  }
+
+  function renderToastOverlay(){
+    var t = state.toast;
+    var el = document.createElement("div");
+    el.className = "reminder-toast";
+    el.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.7 21a2 2 0 01-3.4 0" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>'+
+      '<div class="txt"><h4>Waktunya minum obat</h4><p>'+escapeHtml(t.name)+' &middot; '+escapeHtml(t.dose)+' &middot; '+escapeHtml(instructionLabel(t.instruction))+'</p></div>'+
+      '<button data-action="dismiss-toast">Oke</button>';
+    document.body.appendChild(el);
+  }
+
+  function renderDeleteModal(){
+    var el = document.createElement("div");
+    el.className = "overlay";
+    el.innerHTML = '<div class="modal">'+
+      '<h3>Hapus obat ini?</h3>'+
+      '<p>Pengingat untuk obat ini tidak akan muncul lagi setelah dihapus.</p>'+
+      '<div class="modal-actions">'+
+        '<button class="modal-cancel" data-action="cancel-delete">Batal</button>'+
+        '<button class="modal-confirm" data-action="confirm-delete">Hapus</button>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(el);
+  }
+
+  /* ================= EVENT HANDLING ================= */
+  function attachHandlers(){
+    root.querySelectorAll("[data-action]").forEach(function(elm){
+      elm.addEventListener("click", onAction);
+    });
+    var searchInput = document.getElementById("drugSearch");
+    if(searchInput){
+      searchInput.addEventListener("input", function(e){
+        state.draft.searchQuery = e.target.value;
+        render();
+        var f = document.getElementById("drugSearch");
+        if(f){ f.focus(); f.selectionStart = f.selectionEnd = f.value.length; }
+      });
+    }
+    bindField("fieldName", function(v){ state.draft.name = v; });
+    bindField("fieldDoseAmount", function(v){ state.draft.doseAmount = v; });
+    bindField("fieldDoseUnit", function(v){ state.draft.doseUnit = v; });
+    bindField("fieldFreq", function(v){
+      var n = parseInt(v,10);
+      state.draft.timesPerDay = n;
+      var arr = state.draft.times.slice(0,n);
+      while(arr.length<n) arr.push("");
+      state.draft.times = arr;
+      render();
+    });
+    bindField("fieldDurUnit", function(v){
+      state.draft.durationUnit = v;
+      var opts = durationOptions(v);
+      if(opts.indexOf(state.draft.durationValue) === -1) state.draft.durationValue = opts[0];
+      render();
+    });
+    bindField("fieldDurValue", function(v){ state.draft.durationValue = parseInt(v,10); });
+
+    root.querySelectorAll(".timeInput").forEach(function(inp){
+      inp.addEventListener("change", function(e){
+        var idx = parseInt(e.target.getAttribute("data-idx"),10);
+        state.draft.times[idx] = e.target.value;
+        render();
+      });
+    });
+  }
+
+  function bindField(id, cb){
+    var el = document.getElementById(id);
+    if(!el) return;
+    var evt = (el.tagName==="SELECT") ? "change" : "input";
+    el.addEventListener(evt, function(e){ cb(e.target.value); });
+  }
+
+  function onAction(e){
+    var action = e.currentTarget.getAttribute("data-action");
+    switch(action){
+      case "open-wizard":
+        state.draft = freshDraft();
+        state.step = 1;
+        state.view = "wizard";
+        render();
+        break;
+      case "wiz-back":
+        if(state.step===1){ state.view="list"; render(); }
+        else {
+          if(!validateStep(state.step-1, true)){ /* allow going back regardless */ }
+          state.step -= 1; render();
+        }
+        break;
+      case "pick-drug":
+        var idx = parseInt(e.currentTarget.getAttribute("data-idx"),10);
+        var item = DRUG_DB[idx];
+        state.draft.name = item.name + " " + item.dose;
+        state.draft.brand = item.brand;
+        state.draft.doseUnit = normalizeForm(item.form);
+        state.draft.doseAmount = "1";
+        state.step = 2; render();
+        break;
+      case "manual-entry":
+        state.draft.name = state.draft.searchQuery || "";
+        state.draft.brand = "";
+        state.step = 2; render();
+        break;
+      case "set-period":
+        state.draft.periodType = e.currentTarget.getAttribute("data-val");
+        render();
+        break;
+      case "toggle-day":
+        var day = e.currentTarget.getAttribute("data-day");
+        var i = state.draft.days.indexOf(day);
+        if(i>-1) state.draft.days.splice(i,1); else state.draft.days.push(day);
+        render();
+        break;
+      case "set-instruction":
+        state.draft.instruction = e.currentTarget.getAttribute("data-val");
+        render();
+        break;
+      case "wiz-next":
+        if(validateStep(state.step)){
+          state.step += 1;
+          render();
+        }
+        break;
+      case "finish":
+        finishWizard();
+        break;
+      case "ask-delete":
+        state.confirmDeleteId = e.currentTarget.getAttribute("data-id");
+        render();
+        break;
+      case "cancel-delete":
+        state.confirmDeleteId = null;
+        document.querySelectorAll(".overlay").forEach(function(o){o.remove();});
+        break;
+      case "confirm-delete":
+        state.meds = state.meds.filter(function(m){ return String(m.id) !== String(state.confirmDeleteId); });
+        saveMeds(state.meds);
+        state.confirmDeleteId = null;
+        document.querySelectorAll(".overlay").forEach(function(o){o.remove();});
+        render();
+        break;
+      case "request-permission":
+        requestNotifPermission();
+        break;
+      case "show-info":
+        state.infoDismissed = false;
+        try{ localStorage.setItem("minum_info_dismissed","0"); }catch(err){}
+        render();
+        break;
+      case "dismiss-toast":
+        state.toast = null;
+        document.querySelectorAll(".reminder-toast").forEach(function(o){o.remove();});
+        break;
+    }
+  }
+
+  function normalizeForm(f){
+    if(FORM_OPTIONS.indexOf(f) > -1) return f;
+    if(f.indexOf("ml")>-1) return "ml";
+    if(f.indexOf("tetes")>-1) return "tetes";
+    if(f.indexOf("semprot")>-1 || f.indexOf("inhal")>-1) return "semprot/inhalasi";
+    if(f.indexOf("suppositoria")>-1) return "suppositoria";
+    if(f.indexOf("sachet")>-1) return "sachet";
+    return "lainnya";
+  }
+
+  function validateStep(step){
+    var d = state.draft;
+    if(step===2) return !!d.doseAmount;
+    if(step===3) return d.periodType==="everyday" || d.days.length>0;
+    if(step===4) return d.times.slice(0,d.timesPerDay).every(function(t){return !!t;});
+    return true;
+  }
+
+  function finishWizard(){
+    var d = state.draft;
+    var med = {
+      id: Date.now(),
+      name: d.name || "Obat tanpa nama",
+      brand: d.brand,
+      doseAmount: d.doseAmount,
+      doseUnit: d.doseUnit,
+      periodType: d.periodType,
+      days: d.periodType==="custom" ? d.days.slice() : [],
+      timesPerDay: d.timesPerDay,
+      times: d.times.slice(0,d.timesPerDay),
+      instruction: d.instruction,
+      durationValue: d.durationValue,
+      durationUnit: d.durationUnit,
+      startDate: todayISO(),
+      endDate: addToDate(todayISO(), d.durationValue, d.durationUnit)
+    };
+    state.meds.push(med);
+    saveMeds(state.meds);
+    state.view = "list";
+    render();
+    requestNotifPermission();
+  }
+
+  function requestNotifPermission(){
+    if(typeof Notification === "undefined"){
+      state.notifStatus = "unsupported";
+      render();
+      return;
+    }
+    if(Notification.permission === "granted"){
+      state.notifStatus = "granted";
+      render();
+      return;
+    }
+    if(Notification.permission === "denied"){
+      state.notifStatus = "denied";
+      render();
+      return;
+    }
+    try{
+      var result = Notification.requestPermission(function(perm){
+        state.notifStatus = perm;
+        render();
+      });
+      // Modern browsers return a Promise instead of using the callback
+      if(result && typeof result.then === "function"){
+        result.then(function(perm){
+          state.notifStatus = perm;
+          render();
+        });
+      }
+    }catch(e){
+      state.notifStatus = "unsupported";
+      render();
+    }
+  }
+
+  /* ================= REMINDER ENGINE (berjalan selama halaman ini dibuka) ================= */
+  function checkReminders(){
+    var now = new Date();
+    var hhmm = pad2(now.getHours())+":"+pad2(now.getMinutes());
+    var todayName = DAY_NAMES[(now.getDay()+6)%7]; // getDay: 0=Min -> map to Sen..Min index
+    var todayIso = todayISO();
+
+    state.meds.forEach(function(m){
+      if(todayIso < m.startDate || todayIso > m.endDate) return;
+      var activeToday = m.periodType==="everyday" || m.days.indexOf(todayName) > -1;
+      if(!activeToday) return;
+      m.times.forEach(function(t){
+        if(t !== hhmm) return;
+        var key = m.id + "_" + todayIso + "_" + t;
+        if(state.fired[key]) return;
+        state.fired[key] = true;
+        saveFired(state.fired);
+        fireReminder(m, t);
+      });
+    });
+  }
+
+  function fireReminder(med, time){
+    var doseTxt = med.doseAmount + " " + med.doseUnit;
+    if(typeof Notification !== "undefined" && Notification.permission === "granted"){
+      try{
+        new Notification("Waktunya minum obat: " + med.name, {
+          body: doseTxt + " · " + instructionLabel(med.instruction) + " · jam " + time,
+          tag: med.id + "_" + time
+        });
+      }catch(e){}
+    }
+    state.toast = { name: med.name, dose: doseTxt, instruction: med.instruction };
+    playBeep();
+    render();
+  }
+
+  function playBeep(){
+    try{
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var o = ctx.createOscillator();
+      var g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime+0.55);
+      setTimeout(function(){
+        var o2 = ctx.createOscillator(); var g2 = ctx.createGain();
+        o2.type="sine"; o2.frequency.value=1046;
+        g2.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g2.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime+0.02);
+        g2.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5);
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.start(); o2.stop(ctx.currentTime+0.55);
+      }, 350);
+    }catch(e){}
+  }
+
+  setInterval(checkReminders, 15000);
+
+  /* ================= INIT ================= */
+  render();
+})();
+</script>
+</body>
+</html>
