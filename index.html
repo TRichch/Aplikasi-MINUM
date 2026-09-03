@@ -897,7 +897,7 @@
     el.innerHTML = '<div class="modal">'+
       '<h3>Tentang MINUM</h3>'+
       '<p><strong>MINUM</strong> &mdash; Monitor Ingat Notifikasi Untuk Minum obat.</p>'+
-      '<p>Versi 1.12</p>'+
+      '<p>Versi 1.14</p>'+
       '<p>Dibuat oleh Richard &middot; 2 September 2026.</p>'+
       '<div class="modal-actions">'+
         '<button class="modal-cancel" style="flex:1;" data-action="close-about">Tutup</button>'+
@@ -1117,12 +1117,14 @@
         render();
         break;
       case "ack-reminder":
+        stopAlarmLoop();
         document.querySelectorAll(".reminder-toast").forEach(function(o){o.remove();});
         state.toast.stage = "confirm";
         renderToastOverlay();
         break;
       case "log-taken":
       case "log-missed":
+        stopAlarmLoop();
         var t = state.toast;
         if(t){
           state.history.push({
@@ -1262,8 +1264,28 @@
       }catch(e){}
     }
     state.toast = { stage: "reminder", medId: med.id, name: med.name, dose: doseTxt, instruction: med.instruction, time: time, date: todayISO() };
-    playBeep();
+    startAlarmLoop();
     render();
+  }
+
+  var alarmRepeatTimer = null;
+  function triggerVibrate(){
+    if(navigator.vibrate){
+      try{ navigator.vibrate([300,150,300,150,300]); }catch(e){}
+    }
+  }
+  function startAlarmLoop(){
+    stopAlarmLoop();
+    playBeep();
+    triggerVibrate();
+    alarmRepeatTimer = setInterval(function(){
+      playBeep();
+      triggerVibrate();
+    }, 1800);
+  }
+  function stopAlarmLoop(){
+    if(alarmRepeatTimer){ clearInterval(alarmRepeatTimer); alarmRepeatTimer = null; }
+    if(navigator.vibrate){ try{ navigator.vibrate(0); }catch(e){} }
   }
 
   var sharedAudioCtx = null;
