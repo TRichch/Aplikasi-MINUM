@@ -320,33 +320,33 @@
   var DRUG_DB_STATUS = "loading"; // loading | ready | error
 
   var FALLBACK_DRUG_DB = [
-    {n:"Paracetamol", k:"Paracetamol", f:"tablet", d:"500 mg", m:"Panadol / Sanmol / Bodrex"},
-    {n:"Paracetamol Sirup", k:"Paracetamol", f:"sirup", d:"120 mg/5ml", m:"Sanmol / Tempra"},
-    {n:"Ibuprofen", k:"Ibuprofen", f:"tablet", d:"400 mg", m:"Proris / Bufect"},
-    {n:"Amoxicillin", k:"Amoxicillin", f:"kapsul", d:"500 mg", m:"Amoxsan / Yusimox"},
-    {n:"Amoxicillin Sirup", k:"Amoxicillin", f:"sirup", d:"125 mg/5ml", m:"Generik"},
-    {n:"Cetirizine", k:"Cetirizine", f:"tablet", d:"10 mg", m:"Incidal / Generik"},
-    {n:"Loratadine", k:"Loratadine", f:"tablet", d:"10 mg", m:"Claritin"},
-    {n:"Omeprazole", k:"Omeprazole", f:"kapsul", d:"20 mg", m:"Losec / Generik"},
-    {n:"Ranitidine", k:"Ranitidine", f:"tablet", d:"150 mg", m:"Generik"},
-    {n:"Metformin", k:"Metformin", f:"tablet", d:"500 mg", m:"Glucophage"},
-    {n:"Amlodipine", k:"Amlodipine", f:"tablet", d:"5 mg", m:"Norvask"},
-    {n:"Captopril", k:"Captopril", f:"tablet", d:"25 mg", m:"Generik"},
-    {n:"Simvastatin", k:"Simvastatin", f:"tablet", d:"10 mg", m:"Generik"},
-    {n:"Dexamethasone", k:"Dexamethasone", f:"tablet", d:"0.5 mg", m:"Generik"},
-    {n:"Domperidone", k:"Domperidone", f:"tablet", d:"10 mg", m:"Motilium"},
-    {n:"Antasida DOEN", k:"Antasida", f:"tablet kunyah", d:"200 mg", m:"Generik"},
-    {n:"Oralit", k:"Oralit", f:"sachet", d:"1 sachet", m:"Generik"},
-    {n:"Vitamin C", k:"Ascorbic Acid", f:"tablet", d:"500 mg", m:"Generik"},
-    {n:"Zinc Sulfate", k:"Zinc Sulfate", f:"tablet", d:"20 mg", m:"Generik"},
-    {n:"Salbutamol", k:"Salbutamol", f:"tablet", d:"2 mg", m:"Generik"},
-    {n:"Metronidazole", k:"Metronidazole", f:"tablet", d:"500 mg", m:"Generik"},
-    {n:"Ciprofloxacin", k:"Ciprofloxacin", f:"tablet", d:"500 mg", m:"Generik"},
-    {n:"Bisacodyl", k:"Bisacodyl", f:"tablet", d:"5 mg", m:"Dulcolax"},
-    {n:"Aspirin", k:"Acetylsalicylic Acid", f:"tablet", d:"80 mg", m:"Aspilet"},
-    {n:"Furosemide", k:"Furosemide", f:"tablet", d:"40 mg", m:"Lasix"},
-    {n:"Allopurinol", k:"Allopurinol", f:"tablet", d:"100 mg", m:"Generik"},
-    {n:"Ondansetron", k:"Ondansetron", f:"tablet", d:"4 mg", m:"Generik"}
+    {n:"Paracetamol", k:"Paracetamol", f:"tablet", d:"500 mg"},
+    {n:"Paracetamol Sirup", k:"Paracetamol", f:"sirup", d:"120 mg/5ml"},
+    {n:"Ibuprofen", k:"Ibuprofen", f:"tablet", d:"400 mg"},
+    {n:"Amoxicillin", k:"Amoxicillin", f:"kapsul", d:"500 mg"},
+    {n:"Amoxicillin Sirup", k:"Amoxicillin", f:"sirup", d:"125 mg/5ml"},
+    {n:"Cetirizine", k:"Cetirizine", f:"tablet", d:"10 mg"},
+    {n:"Loratadine", k:"Loratadine", f:"tablet", d:"10 mg"},
+    {n:"Omeprazole", k:"Omeprazole", f:"kapsul", d:"20 mg"},
+    {n:"Ranitidine", k:"Ranitidine", f:"tablet", d:"150 mg"},
+    {n:"Metformin", k:"Metformin", f:"tablet", d:"500 mg"},
+    {n:"Amlodipine", k:"Amlodipine", f:"tablet", d:"5 mg"},
+    {n:"Captopril", k:"Captopril", f:"tablet", d:"25 mg"},
+    {n:"Simvastatin", k:"Simvastatin", f:"tablet", d:"10 mg"},
+    {n:"Dexamethasone", k:"Dexamethasone", f:"tablet", d:"0.5 mg"},
+    {n:"Domperidone", k:"Domperidone", f:"tablet", d:"10 mg"},
+    {n:"Antasida DOEN", k:"Antasida", f:"tablet kunyah", d:"200 mg"},
+    {n:"Oralit", k:"Oralit", f:"sachet", d:""},
+    {n:"Vitamin C", k:"Ascorbic Acid", f:"tablet", d:"500 mg"},
+    {n:"Zinc Sulfate", k:"Zinc Sulfate", f:"tablet", d:"20 mg"},
+    {n:"Salbutamol", k:"Salbutamol", f:"tablet", d:"2 mg"},
+    {n:"Metronidazole", k:"Metronidazole", f:"tablet", d:"500 mg"},
+    {n:"Ciprofloxacin", k:"Ciprofloxacin", f:"tablet", d:"500 mg"},
+    {n:"Bisacodyl", k:"Bisacodyl", f:"tablet", d:"5 mg"},
+    {n:"Aspirin", k:"Acetylsalicylic Acid", f:"tablet", d:"80 mg"},
+    {n:"Furosemide", k:"Furosemide", f:"tablet", d:"40 mg"},
+    {n:"Allopurinol", k:"Allopurinol", f:"tablet", d:"100 mg"},
+    {n:"Ondansetron", k:"Ondansetron", f:"tablet", d:"4 mg"}
   ];
 
   function loadDrugDatabase(){
@@ -772,7 +772,6 @@
           var metaParts = [];
           if(item.k) metaParts.push(item.k);
           if(item.f) metaParts.push(item.f);
-          if(item.m) metaParts.push(item.m);
           html += '<div class="drug-item" data-action="pick-drug" '+
               'data-name="'+escapeHtml(item.n)+'" data-dose="'+escapeHtml(item.d)+'" '+
               'data-form="'+escapeHtml(item.f)+'" data-komposisi="'+escapeHtml(item.k)+'">'+
@@ -924,7 +923,7 @@
     el.innerHTML = '<div class="modal">'+
       '<h3>Tentang MINUM</h3>'+
       '<p><strong>MINUM</strong> &mdash; Monitor Ingat Notifikasi Untuk Minum obat.</p>'+
-      '<p>Versi 1.15</p>'+
+      '<p>Versi 1.16</p>'+
       '<p>Dibuat oleh Richard &middot; 2 September 2026.</p>'+
       '<div class="modal-actions">'+
         '<button class="modal-cancel" style="flex:1;" data-action="close-about">Tutup</button>'+

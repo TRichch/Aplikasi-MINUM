@@ -1,4 +1,4 @@
-var CACHE_NAME = "minum-cache-v4";
+var CACHE_NAME = "minum-cache-v6";
 var URLS_TO_CACHE = [
   "./index.html",
   "./manifest.json",
