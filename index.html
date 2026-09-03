@@ -315,48 +315,56 @@
 (function(){
   "use strict";
 
-  /* ================= DATA: contoh obat (BUKAN database resmi lengkap) ================= */
-  var DRUG_DB = [
-    {name:"Paracetamol", brand:"Panadol / Sanmol / Bodrex", dose:"500 mg", form:"tablet"},
-    {name:"Paracetamol Sirup", brand:"Sanmol / Tempra", dose:"120 mg/5ml", form:"ml"},
-    {name:"Ibuprofen", brand:"Proris / Bufect", dose:"400 mg", form:"tablet"},
-    {name:"Amoxicillin", brand:"Amoxsan / Yusimox", dose:"500 mg", form:"kapsul"},
-    {name:"Amoxicillin Sirup", brand:"Generik", dose:"125 mg/5ml", form:"ml"},
-    {name:"Cetirizine", brand:"Incidal / Generik", dose:"10 mg", form:"tablet"},
-    {name:"Loratadine", brand:"Claritin", dose:"10 mg", form:"tablet"},
-    {name:"Omeprazole", brand:"Losec / Generik", dose:"20 mg", form:"kapsul"},
-    {name:"Ranitidine", brand:"Generik", dose:"150 mg", form:"tablet"},
-    {name:"Metformin", brand:"Glucophage", dose:"500 mg", form:"tablet"},
-    {name:"Metformin", brand:"Glucophage", dose:"850 mg", form:"tablet"},
-    {name:"Amlodipine", brand:"Norvask", dose:"5 mg", form:"tablet"},
-    {name:"Amlodipine", brand:"Norvask", dose:"10 mg", form:"tablet"},
-    {name:"Captopril", brand:"Generik", dose:"25 mg", form:"tablet"},
-    {name:"Simvastatin", brand:"Generik", dose:"10 mg", form:"tablet"},
-    {name:"Simvastatin", brand:"Generik", dose:"20 mg", form:"tablet"},
-    {name:"Dexamethasone", brand:"Generik", dose:"0.5 mg", form:"tablet"},
-    {name:"Domperidone", brand:"Motilium", dose:"10 mg", form:"tablet"},
-    {name:"Antasida DOEN", brand:"Generik", dose:"200 mg", form:"tablet kunyah"},
-    {name:"Diapet", brand:"Diapet", dose:"1 kapsul", form:"kapsul"},
-    {name:"Oralit", brand:"Generik", dose:"1 sachet", form:"sachet"},
-    {name:"Vitamin C", brand:"Generik", dose:"500 mg", form:"tablet"},
-    {name:"Vitamin B Complex", brand:"Generik", dose:"1 tablet", form:"tablet"},
-    {name:"Vitamin D3", brand:"Generik", dose:"1000 IU", form:"tablet"},
-    {name:"Zinc Sulfate", brand:"Generik", dose:"20 mg", form:"tablet"},
-    {name:"Salbutamol Inhaler", brand:"Ventolin", dose:"100 mcg/semprot", form:"semprot/inhalasi"},
-    {name:"Salbutamol", brand:"Generik", dose:"2 mg", form:"tablet"},
-    {name:"Metronidazole", brand:"Generik", dose:"500 mg", form:"tablet"},
-    {name:"Ciprofloxacin", brand:"Generik", dose:"500 mg", form:"tablet"},
-    {name:"Dexamethasone Tetes Mata", brand:"Generik", dose:"1 tetes", form:"tetes"},
-    {name:"Chloramphenicol Salep Mata", brand:"Generik", dose:"1%", form:"lainnya"},
-    {name:"Bisacodyl", brand:"Dulcolax", dose:"5 mg", form:"tablet"},
-    {name:"Bisacodyl Suppositoria", brand:"Dulcolax", dose:"10 mg", form:"suppositoria"},
-    {name:"Aspirin", brand:"Aspilet", dose:"80 mg", form:"tablet"},
-    {name:"Clopidogrel", brand:"Plavix", dose:"75 mg", form:"tablet"},
-    {name:"Furosemide", brand:"Lasix", dose:"40 mg", form:"tablet"},
-    {name:"Allopurinol", brand:"Generik", dose:"100 mg", form:"tablet"},
-    {name:"Methylprednisolone", brand:"Medrol", dose:"4 mg", form:"tablet"},
-    {name:"Ondansetron", brand:"Generik", dose:"4 mg", form:"tablet"}
+  /* ================= DATA: database obat (dimuat dari obat-data.json — sumber resmi BPOM) ================= */
+  var DRUG_DB = [];
+  var DRUG_DB_STATUS = "loading"; // loading | ready | error
+
+  var FALLBACK_DRUG_DB = [
+    {n:"Paracetamol", k:"Paracetamol", f:"tablet", d:"500 mg", m:"Panadol / Sanmol / Bodrex"},
+    {n:"Paracetamol Sirup", k:"Paracetamol", f:"sirup", d:"120 mg/5ml", m:"Sanmol / Tempra"},
+    {n:"Ibuprofen", k:"Ibuprofen", f:"tablet", d:"400 mg", m:"Proris / Bufect"},
+    {n:"Amoxicillin", k:"Amoxicillin", f:"kapsul", d:"500 mg", m:"Amoxsan / Yusimox"},
+    {n:"Amoxicillin Sirup", k:"Amoxicillin", f:"sirup", d:"125 mg/5ml", m:"Generik"},
+    {n:"Cetirizine", k:"Cetirizine", f:"tablet", d:"10 mg", m:"Incidal / Generik"},
+    {n:"Loratadine", k:"Loratadine", f:"tablet", d:"10 mg", m:"Claritin"},
+    {n:"Omeprazole", k:"Omeprazole", f:"kapsul", d:"20 mg", m:"Losec / Generik"},
+    {n:"Ranitidine", k:"Ranitidine", f:"tablet", d:"150 mg", m:"Generik"},
+    {n:"Metformin", k:"Metformin", f:"tablet", d:"500 mg", m:"Glucophage"},
+    {n:"Amlodipine", k:"Amlodipine", f:"tablet", d:"5 mg", m:"Norvask"},
+    {n:"Captopril", k:"Captopril", f:"tablet", d:"25 mg", m:"Generik"},
+    {n:"Simvastatin", k:"Simvastatin", f:"tablet", d:"10 mg", m:"Generik"},
+    {n:"Dexamethasone", k:"Dexamethasone", f:"tablet", d:"0.5 mg", m:"Generik"},
+    {n:"Domperidone", k:"Domperidone", f:"tablet", d:"10 mg", m:"Motilium"},
+    {n:"Antasida DOEN", k:"Antasida", f:"tablet kunyah", d:"200 mg", m:"Generik"},
+    {n:"Oralit", k:"Oralit", f:"sachet", d:"1 sachet", m:"Generik"},
+    {n:"Vitamin C", k:"Ascorbic Acid", f:"tablet", d:"500 mg", m:"Generik"},
+    {n:"Zinc Sulfate", k:"Zinc Sulfate", f:"tablet", d:"20 mg", m:"Generik"},
+    {n:"Salbutamol", k:"Salbutamol", f:"tablet", d:"2 mg", m:"Generik"},
+    {n:"Metronidazole", k:"Metronidazole", f:"tablet", d:"500 mg", m:"Generik"},
+    {n:"Ciprofloxacin", k:"Ciprofloxacin", f:"tablet", d:"500 mg", m:"Generik"},
+    {n:"Bisacodyl", k:"Bisacodyl", f:"tablet", d:"5 mg", m:"Dulcolax"},
+    {n:"Aspirin", k:"Acetylsalicylic Acid", f:"tablet", d:"80 mg", m:"Aspilet"},
+    {n:"Furosemide", k:"Furosemide", f:"tablet", d:"40 mg", m:"Lasix"},
+    {n:"Allopurinol", k:"Allopurinol", f:"tablet", d:"100 mg", m:"Generik"},
+    {n:"Ondansetron", k:"Ondansetron", f:"tablet", d:"4 mg", m:"Generik"}
   ];
+
+  function loadDrugDatabase(){
+    if(typeof fetch !== "function") { DRUG_DB = FALLBACK_DRUG_DB; DRUG_DB_STATUS = "error"; return; }
+    fetch("obat-data.json").then(function(res){
+      if(!res.ok) throw new Error("status " + res.status);
+      return res.json();
+    }).then(function(data){
+      DRUG_DB = data;
+      DRUG_DB_STATUS = "ready";
+      if(state.view === "wizard" && state.step === 1){ render(); }
+    }).catch(function(){
+      DRUG_DB = FALLBACK_DRUG_DB;
+      DRUG_DB_STATUS = "error";
+      if(state.view === "wizard" && state.step === 1){ render(); }
+    });
+  }
+
 
   var FORM_OPTIONS = ["tablet","kapsul","ml","sendok takar","tetes","sachet","suppositoria","semprot/inhalasi","unit (injeksi)","lainnya"];
   var DAY_NAMES = ["Sen","Sel","Rab","Kam","Jum","Sab","Min"];
@@ -734,24 +742,42 @@
   function renderStep1(){
     var d = state.draft;
     var q = d.searchQuery.trim().toLowerCase();
-    var results = q.length===0 ? [] : DRUG_DB.filter(function(item){
-      return item.name.toLowerCase().indexOf(q)>-1 || item.brand.toLowerCase().indexOf(q)>-1;
-    }).slice(0,20);
+    var results = [];
+    if(q.length>=2 && DRUG_DB.length>0){
+      results = DRUG_DB.filter(function(item){
+        return item.n.toLowerCase().indexOf(q)>-1 || item.k.toLowerCase().indexOf(q)>-1;
+      }).slice(0,20);
+    }
 
-    var html = '<p class="step-sub">Ketik nama obat (generik atau merek dagang). Daftar ini adalah contoh umum, bukan basis data resmi lengkap — bila tidak ditemukan, gunakan input manual.</p>';
+    var sourceNote = DRUG_DB_STATUS === "ready"
+      ? "Data diambil dari basis data resmi BPOM (" + DRUG_DB.length.toLocaleString('id-ID') + " produk terdaftar). Bila tidak ditemukan, gunakan input manual."
+      : (DRUG_DB_STATUS === "loading"
+          ? "Sedang memuat basis data obat BPOM&hellip;"
+          : "Basis data lengkap sedang tidak bisa dimuat (perlu koneksi internet saat pertama kali dibuka) — daftar contoh terbatas ditampilkan. Gunakan input manual bila perlu.");
+
+    var html = '<p class="step-sub">Ketik nama obat (generik atau merek dagang), minimal 2 huruf. '+sourceNote+'</p>';
     html += '<div class="search-box">'+
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#4A5A52" stroke-width="1.8"/><path d="M21 21l-4-4" stroke="#4A5A52" stroke-width="1.8" stroke-linecap="round"/></svg>'+
       '<input type="text" id="drugSearch" placeholder="Contoh: paracetamol, amoxicillin..." value="'+escapeHtml(d.searchQuery)+'">'+
     '</div>';
 
-    if(q.length>0){
+    if(q.length>0 && q.length<2){
+      html += '<div class="no-result">Ketik minimal 2 huruf untuk mencari.</div>';
+    } else if(q.length>=2){
       if(results.length===0){
         html += '<div class="no-result">Tidak ditemukan untuk &ldquo;'+escapeHtml(d.searchQuery)+'&rdquo;.</div>';
       } else {
-        results.forEach(function(item, idx){
-          html += '<div class="drug-item" data-action="pick-drug" data-idx="'+DRUG_DB.indexOf(item)+'">'+
-            '<p class="drug-name">'+escapeHtml(item.name)+' '+escapeHtml(item.dose)+'</p>'+
-            '<p class="drug-meta">'+escapeHtml(item.brand)+' &middot; '+escapeHtml(item.form)+'</p>'+
+        results.forEach(function(item){
+          var title = item.n + (item.d ? " " + item.d : "");
+          var metaParts = [];
+          if(item.k) metaParts.push(item.k);
+          if(item.f) metaParts.push(item.f);
+          if(item.m) metaParts.push(item.m);
+          html += '<div class="drug-item" data-action="pick-drug" '+
+              'data-name="'+escapeHtml(item.n)+'" data-dose="'+escapeHtml(item.d)+'" '+
+              'data-form="'+escapeHtml(item.f)+'" data-komposisi="'+escapeHtml(item.k)+'">'+
+            '<p class="drug-name">'+escapeHtml(title)+'</p>'+
+            '<p class="drug-meta">'+escapeHtml(metaParts.join(' \u00b7 '))+'</p>'+
           '</div>';
         });
       }
@@ -762,6 +788,7 @@
 
   function renderStep2(){
     var d = state.draft;
+
     var html = '<p class="step-sub">Obat terpilih: <strong>'+escapeHtml(d.name)+'</strong>'+(d.brand?' ('+escapeHtml(d.brand)+')':'')+'</p>';
     html += '<div class="field"><label>Nama obat</label><input type="text" id="fieldName" value="'+escapeHtml(d.name)+'" placeholder="Nama obat"></div>';
     html += '<div class="row-2">'+
@@ -897,7 +924,7 @@
     el.innerHTML = '<div class="modal">'+
       '<h3>Tentang MINUM</h3>'+
       '<p><strong>MINUM</strong> &mdash; Monitor Ingat Notifikasi Untuk Minum obat.</p>'+
-      '<p>Versi 1.14</p>'+
+      '<p>Versi 1.15</p>'+
       '<p>Dibuat oleh Richard &middot; 2 September 2026.</p>'+
       '<div class="modal-actions">'+
         '<button class="modal-cancel" style="flex:1;" data-action="close-about">Tutup</button>'+
@@ -1020,11 +1047,14 @@
         }
         break;
       case "pick-drug":
-        var idx = parseInt(e.currentTarget.getAttribute("data-idx"),10);
-        var item = DRUG_DB[idx];
-        state.draft.name = item.name + " " + item.dose;
-        state.draft.brand = item.brand;
-        state.draft.doseUnit = normalizeForm(item.form);
+        var pEl = e.currentTarget;
+        var pName = pEl.getAttribute("data-name") || "";
+        var pDose = pEl.getAttribute("data-dose") || "";
+        var pForm = pEl.getAttribute("data-form") || "";
+        var pKomposisi = pEl.getAttribute("data-komposisi") || "";
+        state.draft.name = pName + (pDose ? " " + pDose : "");
+        state.draft.brand = pKomposisi;
+        state.draft.doseUnit = normalizeForm(pForm);
         state.draft.doseAmount = "1";
         state.step = 2; render();
         break;
@@ -1148,13 +1178,16 @@
 
   }
 
-  function normalizeForm(f){
-    if(FORM_OPTIONS.indexOf(f) > -1) return f;
-    if(f.indexOf("ml")>-1) return "ml";
-    if(f.indexOf("tetes")>-1) return "tetes";
-    if(f.indexOf("semprot")>-1 || f.indexOf("inhal")>-1) return "semprot/inhalasi";
-    if(f.indexOf("suppositoria")>-1) return "suppositoria";
-    if(f.indexOf("sachet")>-1) return "sachet";
+  function normalizeForm(fRaw){
+    var f = (fRaw || "").toUpperCase();
+    if(f.indexOf("KAPLET")>-1 || f.indexOf("TABLET")>-1) return "tablet";
+    if(f.indexOf("KAPSUL")>-1) return "kapsul";
+    if(f.indexOf("SIRUP")>-1 || f.indexOf("SUSPENSI")>-1 || f.indexOf("EMULSI")>-1 || f.indexOf("LARUTAN")>-1 || f.indexOf("ELIXIR")>-1) return "ml";
+    if(f.indexOf("TETES")>-1) return "tetes";
+    if(f.indexOf("SEMPROT")>-1 || f.indexOf("INHAL")>-1 || f.indexOf("NEBUL")>-1 || f.indexOf("AEROSOL")>-1) return "semprot/inhalasi";
+    if(f.indexOf("SUPPOSITORIA")>-1 || f.indexOf("OVULA")>-1) return "suppositoria";
+    if(f.indexOf("SACHET")>-1 || f.indexOf("SERBUK")>-1 || f.indexOf("GRANUL")>-1) return "sachet";
+    if(f.indexOf("INJEKSI")>-1 || f.indexOf("INFUS")>-1 || f.indexOf("VIAL")>-1 || f.indexOf("AMPUL")>-1 || f.indexOf("PEN")>-1) return "unit (injeksi)";
     return "lainnya";
   }
 
@@ -1334,6 +1367,7 @@
 
   /* ================= INIT ================= */
   render();
+  loadDrugDatabase();
 
   if("serviceWorker" in navigator){
     window.addEventListener("load", function(){

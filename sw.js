@@ -1,9 +1,10 @@
-var CACHE_NAME = "minum-cache-v3";
+var CACHE_NAME = "minum-cache-v4";
 var URLS_TO_CACHE = [
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./obat-data.json"
 ];
 
 self.addEventListener("install", function(event){
